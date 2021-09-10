@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Skeleton))]
 public class PoseFramePlayer : MonoBehaviour
 {
-	public string File = "C:/Users/Dankrushen/Documents/SlimeVR AutoBone/Butterscotch! - Copy/ABRecording1.abf";
+	public string File = "C:/Users/Dankrushen/Documents/SlimeVR AutoBone/Butterscotch!/ABRecording1.abf";
 	private string _loadedFile;
 
 	public PoseFrame[] Frames;
