@@ -14,14 +14,14 @@ public class PoseFrame
         this.Positions = positions;
     }
 
-	public PoseFrame(GameObject root, GameObject[] nodes)
+	public PoseFrame(GameObject root)
 	{
 		// Copy headset position
 		this.RootPos = root.transform.position;
 
 		// Copy all rotations
 		this.Rotations = new Dictionary<string, Quaternion>();
-		foreach (var node in nodes)
+		foreach (Transform node in root.transform)
 		{
 			Rotations.Add(node.name, node.transform.rotation);
 		}
