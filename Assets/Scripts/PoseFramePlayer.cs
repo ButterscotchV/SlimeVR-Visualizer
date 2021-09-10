@@ -11,7 +11,7 @@ public class PoseFramePlayer : MonoBehaviour
 	public bool Play = true;
 	public bool Loop = true;
 
-	[Min(1)]
+	[Min(float.Epsilon)]
 	public float Interval = 20f / 1000f; // 20 ms
 	private float NextFrameTime = 0f;
 
