@@ -3,6 +3,9 @@ using UnityEngine;
 [RequireComponent(typeof(Skeleton))]
 public class PoseFramePlayer : MonoBehaviour
 {
+	public string File = "C:/Users/Dankrushen/Documents/SlimeVR AutoBone/Butterscotch! - Copy/ABRecording1.abf";
+	private string _loadedFile;
+
 	public PoseFrame[] Frames;
 
 	public bool Play = true;
@@ -17,11 +20,10 @@ public class PoseFramePlayer : MonoBehaviour
 
 	private Skeleton _skeleton;
 
-	private void Start()
+	private void LoadFile(string file)
 	{
-		_skeleton = GetComponent<Skeleton>();
-
-		PoseFrame[] frames = PoseFrameIO.ReadFromFile("C:/Users/Dankrushen/Documents/SlimeVR AutoBone/Butterscotch! - Copy/ABRecording1.abf");
+		PoseFrame[] frames = PoseFrameIO.ReadFromFile(file);
+		_loadedFile = File;
 
 		if (frames != null && frames.Length > 0)
 		{
@@ -34,12 +36,25 @@ public class PoseFramePlayer : MonoBehaviour
 		}
 	}
 
+	private void Start()
+	{
+		_skeleton = GetComponent<Skeleton>();
+
+		LoadFile(File);
+	}
+
 	private void Update()
 	{
 		_skeleton.DrawDebug();
 
 		if (!Play || Time.realtimeSinceStartup >= NextFrameTime)
 		{
+			if (File != _loadedFile)
+			{
+				LoadFile(File);
+				Cursor = 0;
+			}
+
 			PoseFrame[] frames = Frames;
 
 			if (frames != null && frames.Length > 0)
