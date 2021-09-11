@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 public class Skeleton : MonoBehaviour
 {
-	[SerializeField]
-	private float WaistDistance = 0.85f;
-	[SerializeField]
-	private float ChestDistance = 0.42f;
-	[SerializeField]
-	private float LegsLength = 0.84f;
-	[SerializeField]
-	private float KneeHeight = 0.42f;
+	private float WaistDistance;
+	private float ChestDistance;
+	private float LegsLength;
+	private float KneeHeight;
 
 	public GameObject Hmd;
 	public GameObject Head;
@@ -38,9 +37,49 @@ public class Skeleton : MonoBehaviour
 		{ "Legs length", 0.84f }
 	};
 
+	private bool LoadConfig(string file)
+	{
+		try
+		{
+			var deserializer = new DeserializerBuilder().WithNamingConvention(new CamelCaseNamingConvention()).Build();
+
+			using (var fileStream = File.OpenText(file))
+			{
+				var config = deserializer.Deserialize<dynamic>(fileStream);
+				var bodyConfig = config["body"];
+
+				Configs["Head"] = float.Parse(bodyConfig["headShift"]);
+				Configs["Neck"] = float.Parse(bodyConfig["neckLength"]);
+				Configs["Waist"] = float.Parse(bodyConfig["waistDistance"]);
+				Configs["Chest"] = float.Parse(bodyConfig["chestDistance"]);
+				Configs["Hips width"] = float.Parse(bodyConfig["hipsWidth"]);
+				Configs["Knee height"] = float.Parse(bodyConfig["kneeHeight"]);
+				Configs["Legs length"] = float.Parse(bodyConfig["legsLength"]);
+			}
+		}
+		catch (Exception e)
+		{
+			Debug.LogException(e);
+			return false;
+		}
+
+		return true;
+	}
+
 	// Start is called before the first frame update
 	private void Start()
     {
+		// Load config values
+		if (LoadConfig("vrconfig.yml"))
+		{
+			Debug.Log("Loaded config bone lengths!");
+
+			foreach (var boneLength in Configs)
+			{
+				Debug.Log($"{boneLength.Key}: {boneLength.Value}");
+			}
+		}
+
 		Hmd = new GameObject("HMD");
 		Head = new GameObject("Head");
 		Neck = new GameObject("Neck");

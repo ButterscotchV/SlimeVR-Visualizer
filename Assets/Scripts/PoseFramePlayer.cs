@@ -17,6 +17,7 @@ public class PoseFramePlayer : MonoBehaviour
 
 	[Min(0)]
 	public int Cursor = 0;
+	private int curCursor = 0;
 
 	private Skeleton _skeleton;
 
@@ -62,7 +63,15 @@ public class PoseFramePlayer : MonoBehaviour
 				if (Cursor >= 0 && Cursor < frames.Length)
 				{
 					NextFrameTime = Time.realtimeSinceStartup + Interval;
-					_skeleton.SetPoseFromFrame(frames[Play ? Cursor++ : Cursor]);
+					if (Play || curCursor != Cursor)
+					{
+						curCursor = Play ? Cursor++ : Cursor;
+						_skeleton.SetPoseFromFrame(frames[curCursor]);
+
+						Vector3 left = _skeleton.LeftAnkle.transform.position;
+						Vector3 right = _skeleton.RightAnkle.transform.position;
+						Debug.Log($"Feet positions:\nLeft {left.ToString("F4")}\tRight {right.ToString("F4")}");
+					}
 				}
 				else if (Loop)
 				{
