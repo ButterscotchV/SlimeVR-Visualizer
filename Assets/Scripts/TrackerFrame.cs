@@ -1,4 +1,6 @@
 using UnityEngine;
+using static TrackerBodyPositionEnum;
+using static TrackerFrameDataEnum;
 
 public class TrackerFrame
 {
@@ -13,19 +15,19 @@ public class TrackerFrame
 		Designation = designation;
 		if (designation != null)
 		{
-			DataFlags |= TrackerFrameData.Designation.Flag;
+			DataFlags |= TrackerFrameDataEnum.Designation.Flag;
 		}
 
 		Rotation = rotation;
 		if (rotation != null)
 		{
-			DataFlags |= TrackerFrameData.Rotation.Flag;
+			DataFlags |= TrackerFrameDataEnum.Rotation.Flag;
 		}
 
 		Position = position;
 		if (position != null)
 		{
-			DataFlags |= TrackerFrameData.Position.Flag;
+			DataFlags |= TrackerFrameDataEnum.Position.Flag;
 		}
 	}
 

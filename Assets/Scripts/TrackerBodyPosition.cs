@@ -1,7 +1,20 @@
 using System.Collections.Generic;
 
-public class TrackerBodyPosition
+public class TrackerBodyPositionEnum
 {
+	public class TrackerBodyPosition
+	{
+		public readonly string Designation;
+
+		public TrackerBodyPosition(string designation)
+		{
+			Designation = designation;
+			_byDesignation[designation.ToLower()] = this;
+		}
+	}
+
+	private static readonly Dictionary<string, TrackerBodyPosition> _byDesignation = new Dictionary<string, TrackerBodyPosition>();
+
 	public static readonly TrackerBodyPosition None = new TrackerBodyPosition("");
 	public static readonly TrackerBodyPosition Hmd = new TrackerBodyPosition("body:HMD");
 	public static readonly TrackerBodyPosition Chest = new TrackerBodyPosition("body:chest");
@@ -18,16 +31,6 @@ public class TrackerBodyPosition
 
 	public static readonly TrackerBodyPosition LeftController = new TrackerBodyPosition("body:left_controller");
 	public static readonly TrackerBodyPosition RightController = new TrackerBodyPosition("body:right_conroller");
-
-	private static readonly Dictionary<string, TrackerBodyPosition> _byDesignation = new Dictionary<string, TrackerBodyPosition>();
-
-	public readonly string Designation;
-
-	private TrackerBodyPosition(string designation)
-	{
-		Designation = designation;
-		_byDesignation.Add(designation.ToLower(), this);
-	}
 
 	public static TrackerBodyPosition GetByDesignation(string designation)
 	{

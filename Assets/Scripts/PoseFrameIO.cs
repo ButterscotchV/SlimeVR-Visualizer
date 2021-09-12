@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using static TrackerBodyPositionEnum;
 
 public static class PoseFrameIO
 {
@@ -41,12 +42,12 @@ public static class PoseFrameIO
 				{
 					outputStream.Write(trackerFrame.DataFlags);
 
-					if (trackerFrame.HasData(TrackerFrameData.Designation))
+					if (trackerFrame.HasData(TrackerFrameDataEnum.Designation))
 					{
 						outputStream.Write(trackerFrame.Designation.Designation);
 					}
 
-					if (trackerFrame.HasData(TrackerFrameData.Rotation))
+					if (trackerFrame.HasData(TrackerFrameDataEnum.Rotation))
 					{
 						Quaternion quat = trackerFrame.Rotation.Value;
 						outputStream.Write(quat.x);
@@ -55,7 +56,7 @@ public static class PoseFrameIO
 						outputStream.Write(quat.w);
 					}
 
-					if (trackerFrame.HasData(TrackerFrameData.Position))
+					if (trackerFrame.HasData(TrackerFrameDataEnum.Position))
 					{
 						Vector3 vec = trackerFrame.Position.Value;
 						outputStream.Write(vec.x);
@@ -125,22 +126,20 @@ public static class PoseFrameIO
 		try
 		{
 			int trackerFrameCount = inputStream.ReadInt32();
-			Debug.Log($"Received {trackerFrameCount} tracker frames");
 
 			Dictionary<TrackerBodyPosition, TrackerFrame> trackerFrames = new Dictionary<TrackerBodyPosition, TrackerFrame>(trackerFrameCount);
 			for (int i = 0; i < trackerFrameCount; i++)
 			{
 				int dataFlags = inputStream.ReadInt32();
-				Debug.Log($"Received {dataFlags} dataflags");
 
 				TrackerBodyPosition designation = null;
-				if (TrackerFrameData.Designation.Check(dataFlags))
+				if (TrackerFrameDataEnum.Designation.Check(dataFlags))
 				{
-					designation = TrackerBodyPosition.GetByDesignation(inputStream.ReadString());
+					designation = TrackerBodyPositionEnum.GetByDesignation(inputStream.ReadString());
 				}
 
 				Quaternion? rotation = null;
-				if (TrackerFrameData.Rotation.Check(dataFlags))
+				if (TrackerFrameDataEnum.Rotation.Check(dataFlags))
 				{
 					float quatX = inputStream.ReadSingle();
 					float quatY = inputStream.ReadSingle();
@@ -150,7 +149,7 @@ public static class PoseFrameIO
 				}
 
 				Vector3? position = null;
-				if (TrackerFrameData.Position.Check(dataFlags))
+				if (TrackerFrameDataEnum.Position.Check(dataFlags))
 				{
 					float posX = inputStream.ReadSingle();
 					float posY = inputStream.ReadSingle();
@@ -158,7 +157,10 @@ public static class PoseFrameIO
 					position = new Vector3(posX, posY, posZ);
 				}
 
-				trackerFrames[designation] = new TrackerFrame(designation, rotation, position);
+				if (designation != null)
+				{
+					trackerFrames[designation] = new TrackerFrame(designation, rotation, position);
+				}
 			}
 
 			return new PoseFrame(trackerFrames);

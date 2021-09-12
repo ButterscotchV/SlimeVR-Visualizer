@@ -4,6 +4,7 @@ using System.IO;
 using UnityEngine;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using static TrackerBodyPositionEnum;
 
 public class Skeleton : MonoBehaviour
 {
@@ -222,12 +223,12 @@ public class Skeleton : MonoBehaviour
 	{
 		foreach (var trackerFrame in frame.TrackerFrames.Values)
 		{
-			if (trackerFrame.Designation == TrackerBodyPosition.Hmd && trackerFrame.HasData(TrackerFrameData.Position))
+			if (trackerFrame.Designation == TrackerBodyPositionEnum.Hmd && trackerFrame.HasData(TrackerFrameDataEnum.Position))
 			{
 				Hmd.transform.position = trackerFrame.Position.Value;
 			}
 
-			if (trackerFrame.HasData(TrackerFrameData.Rotation))
+			if (trackerFrame.HasData(TrackerFrameDataEnum.Rotation))
 			{
 				GameObject node = GetNode(trackerFrame.Designation, true);
 				node.transform.rotation = trackerFrame.Rotation.Value;
