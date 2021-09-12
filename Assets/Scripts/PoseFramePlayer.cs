@@ -71,7 +71,7 @@ public class PoseFramePlayer : MonoBehaviour
 
 						Vector3 left = _skeleton.LeftAnkle.transform.position;
 						Vector3 right = _skeleton.RightAnkle.transform.position;
-						Debug.Log($"Foot positions:\nLeft {left.ToString("F4")}\tRight {right.ToString("F4")}");
+						Debug.Log($"Foot positions:\nOffset {(right - left).ToString("F4")}    Left {left.ToString("F4")}    Right {right.ToString("F4")}");
 					}
 				}
 				else if (Loop)

@@ -214,6 +214,7 @@ MonoBehaviour:
     m_NumColorKeys: 3
     m_NumAlphaKeys: 2
   LineWidth: 0.02
+  HipMix: 0.33333334
   Hmd: {fileID: 0}
   Head: {fileID: 0}
   Neck: {fileID: 0}
@@ -380,6 +381,7 @@ MonoBehaviour:
     m_NumColorKeys: 3
     m_NumAlphaKeys: 2
   LineWidth: 0.02
+  HipMix: 0.33333334
   Hmd: {fileID: 0}
   Head: {fileID: 0}
   Neck: {fileID: 0}
@@ -576,6 +578,7 @@ MonoBehaviour:
     m_NumColorKeys: 3
     m_NumAlphaKeys: 2
   LineWidth: 0.02
+  HipMix: 0.33333334
   Hmd: {fileID: 0}
   Head: {fileID: 0}
   Neck: {fileID: 0}
@@ -711,6 +714,7 @@ MonoBehaviour:
     m_NumColorKeys: 3
     m_NumAlphaKeys: 2
   LineWidth: 0.02
+  HipMix: 0.33333334
   Hmd: {fileID: 0}
   Head: {fileID: 0}
   Neck: {fileID: 0}

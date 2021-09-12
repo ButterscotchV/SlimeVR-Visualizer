@@ -28,6 +28,8 @@ public class Skeleton : MonoBehaviour
 	private LineRenderer LeftLegLine;
 	private LineRenderer RightLegLine;
 
+	public float HipMix = 1f/3f;
+
 	public GameObject Hmd;
 	public GameObject Head;
 	public GameObject Neck;
@@ -248,8 +250,8 @@ public class Skeleton : MonoBehaviour
 			return;
 		}
 
-		// Average the pelvis with 50% of the waist rotation
-		Quaternion rotation = Quaternion.Lerp(waistRot, chestRot, 0.3f);
+		// Average the pelvis with the waist rotation
+		Quaternion rotation = Quaternion.Lerp(waistRot, chestRot, HipMix);
 		Waist.transform.rotation = rotation;
 	}
 
