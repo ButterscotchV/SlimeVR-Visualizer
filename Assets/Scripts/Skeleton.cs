@@ -28,20 +28,20 @@ public class Skeleton : MonoBehaviour
 	private LineRenderer LeftLegLine;
 	private LineRenderer RightLegLine;
 
-	public float HipMix = 1f/3f;
+	public float HipMix = 1f / 3f;
 
-	public GameObject Hmd;
-	public GameObject Head;
-	public GameObject Neck;
-	public GameObject Waist;
-	public GameObject Chest;
+	[NonSerialized] public GameObject Hmd;
+	[NonSerialized] public GameObject Head;
+	[NonSerialized] public GameObject Neck;
+	[NonSerialized] public GameObject Waist;
+	[NonSerialized] public GameObject Chest;
 
-	public GameObject LeftHip;
-	public GameObject LeftKnee;
-	public GameObject LeftAnkle;
-	public GameObject RightHip;
-	public GameObject RightKnee;
-	public GameObject RightAnkle;
+	[NonSerialized] public GameObject LeftHip;
+	[NonSerialized] public GameObject LeftKnee;
+	[NonSerialized] public GameObject LeftAnkle;
+	[NonSerialized] public GameObject RightHip;
+	[NonSerialized] public GameObject RightKnee;
+	[NonSerialized] public GameObject RightAnkle;
 
 	public Dictionary<string, Transform> Nodes = new Dictionary<string, Transform>(11);
 	public Dictionary<string, float> Configs = new Dictionary<string, float>()
@@ -86,7 +86,7 @@ public class Skeleton : MonoBehaviour
 
 	// Start is called before the first frame update
 	private void Start()
-    {
+	{
 		// Load config values
 		if (LoadConfig(VrConfig))
 		{
@@ -220,39 +220,30 @@ public class Skeleton : MonoBehaviour
 
 	public void SetPoseFromFrame(PoseFrame frame)
 	{
-		Hmd.transform.localPosition = frame.RootPos;
-
-		AveragePelvis(frame);
-
-		foreach (var rot in frame.Rotations)
+		foreach (var trackerFrame in frame.TrackerFrames.Values)
 		{
-			if (rot.Key != "Waist" && Nodes.TryGetValue(rot.Key, out var transform))
+			if (trackerFrame.Designation == TrackerBodyPosition.Hmd && trackerFrame.HasData(TrackerFrameData.Position))
 			{
-				transform.rotation = rot.Value;
+				Hmd.transform.position = trackerFrame.Position.Value;
+			}
+
+			if (trackerFrame.HasData(TrackerFrameData.Rotation))
+			{
+				GameObject node = GetNode(trackerFrame.Designation, true);
+				node.transform.rotation = trackerFrame.Rotation.Value;
 			}
 		}
 	}
 
 	public void ApplyModifications()
 	{
-		//ApplyFootOffset();
+		AveragePelvis();
 	}
 
-	public void AveragePelvis(PoseFrame frame)
+	public void AveragePelvis()
 	{
-		if (!frame.Rotations.TryGetValue("Waist", out var waistRot))
-		{
-			return;
-		}
-
-		if (!frame.Rotations.TryGetValue("Chest", out var chestRot))
-		{
-			return;
-		}
-
 		// Average the pelvis with the waist rotation
-		Quaternion rotation = Quaternion.Lerp(waistRot, chestRot, HipMix);
-		Waist.transform.rotation = rotation;
+		Waist.transform.rotation = Quaternion.Lerp(Quaternion.Lerp(LeftHip.transform.rotation, RightHip.transform.rotation, 0.5f), Chest.transform.rotation, HipMix);
 	}
 
 	public void ApplyFootOffset()
@@ -262,6 +253,31 @@ public class Skeleton : MonoBehaviour
 
 		float rightAngle = Quaternion.Angle(RightHip.transform.rotation, RightKnee.transform.rotation);
 		RightKnee.transform.Rotate(0, 0, rightAngle * RightScale);
+	}
+
+	public GameObject GetNode(TrackerBodyPosition bodyPosition, bool rotationNode = false)
+	{
+		switch (bodyPosition.Designation.ToLower())
+		{
+			case "body:hmd":
+				return Hmd;
+			case "body:chest":
+				return rotationNode ? Neck : Chest;
+			case "body:waist":
+				return rotationNode ? Chest : Waist;
+
+			case "body:left_leg":
+				return rotationNode ? LeftHip : LeftKnee;
+			case "body:right_leg":
+				return rotationNode ? RightHip : RightKnee;
+
+			case "body:left_ankle":
+				return rotationNode ? LeftKnee : LeftAnkle;
+			case "body:right_ankle":
+				return rotationNode ? RightKnee : RightAnkle;
+		}
+
+		return null;
 	}
 
 	public void DrawDebug()

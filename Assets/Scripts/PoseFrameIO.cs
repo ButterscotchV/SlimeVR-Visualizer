@@ -33,52 +33,36 @@ public static class PoseFrameIO
 	{
 		try
 		{
-			// Write root position vector
-			outputStream.Write(frame.RootPos.x);
-			outputStream.Write(frame.RootPos.y);
-			outputStream.Write(frame.RootPos.z);
-
-			if (frame.Rotations != null)
+			if (frame != null && frame.TrackerFrames != null)
 			{
-				// Write rotations
-				outputStream.Write(frame.Rotations.Count);
-				foreach (KeyValuePair<String, Quaternion> entry in frame.Rotations)
+				outputStream.Write(frame.TrackerFrames.Count);
+
+				foreach (TrackerFrame trackerFrame in frame.TrackerFrames.Values)
 				{
-					// Write the label string
-					outputStream.Write(entry.Key);
+					outputStream.Write(trackerFrame.DataFlags);
 
-					// Write the rotation quaternion
-					Quaternion quat = entry.Value;
-					outputStream.Write(quat.x);
-					outputStream.Write(quat.y);
-					outputStream.Write(quat.z);
-					outputStream.Write(quat.w);
+					if (trackerFrame.HasData(TrackerFrameData.Designation))
+					{
+						outputStream.Write(trackerFrame.Designation.Designation);
+					}
+
+					if (trackerFrame.HasData(TrackerFrameData.Rotation))
+					{
+						Quaternion quat = trackerFrame.Rotation.Value;
+						outputStream.Write(quat.x);
+						outputStream.Write(quat.y);
+						outputStream.Write(quat.z);
+						outputStream.Write(quat.w);
+					}
+
+					if (trackerFrame.HasData(TrackerFrameData.Position))
+					{
+						Vector3 vec = trackerFrame.Position.Value;
+						outputStream.Write(vec.x);
+						outputStream.Write(vec.y);
+						outputStream.Write(vec.z);
+					}
 				}
-			}
-			else
-			{
-				outputStream.Write(0);
-			}
-
-			if (frame.Positions != null)
-			{
-				// Write positions
-				outputStream.Write(frame.Positions.Count);
-				foreach (KeyValuePair<String, Vector3> entry in frame.Positions)
-				{
-					// Write the label string
-					outputStream.Write(entry.Key);
-
-					// Write the rotation quaternion
-					Vector3 vec = entry.Value;
-					outputStream.Write(vec.x);
-					outputStream.Write(vec.y);
-					outputStream.Write(vec.z);
-				}
-			}
-			else
-			{
-				outputStream.Write(0);
 			}
 		}
 		catch (Exception e)
@@ -140,50 +124,44 @@ public static class PoseFrameIO
 	{
 		try
 		{
-			float vecX = inputStream.ReadSingle();
-			float vecY = inputStream.ReadSingle();
-			float vecZ = inputStream.ReadSingle();
+			int trackerFrameCount = inputStream.ReadInt32();
+			Debug.Log($"Received {trackerFrameCount} tracker frames");
 
-			Vector3 vector = new Vector3(vecX, vecY, vecZ);
-
-			int rotationCount = inputStream.ReadInt32();
-			Dictionary<String, Quaternion> rotations = null;
-			if (rotationCount > 0)
+			Dictionary<TrackerBodyPosition, TrackerFrame> trackerFrames = new Dictionary<TrackerBodyPosition, TrackerFrame>(trackerFrameCount);
+			for (int i = 0; i < trackerFrameCount; i++)
 			{
-				rotations = new Dictionary<String, Quaternion>(rotationCount);
-				for (int j = 0; j < rotationCount; j++)
-				{
-					String label = inputStream.ReadString();
+				int dataFlags = inputStream.ReadInt32();
+				Debug.Log($"Received {dataFlags} dataflags");
 
+				TrackerBodyPosition designation = null;
+				if (TrackerFrameData.Designation.Check(dataFlags))
+				{
+					designation = TrackerBodyPosition.GetByDesignation(inputStream.ReadString());
+				}
+
+				Quaternion? rotation = null;
+				if (TrackerFrameData.Rotation.Check(dataFlags))
+				{
 					float quatX = inputStream.ReadSingle();
 					float quatY = inputStream.ReadSingle();
 					float quatZ = inputStream.ReadSingle();
 					float quatW = inputStream.ReadSingle();
-					Quaternion quaternion = new Quaternion(quatX, quatY, quatZ, quatW);
-
-					rotations.Add(label, quaternion);
+					rotation = new Quaternion(quatX, quatY, quatZ, quatW);
 				}
-			}
 
-			int positionCount = inputStream.ReadInt32();
-			Dictionary<String, Vector3> positions = null;
-			if (positionCount > 0)
-			{
-				positions = new Dictionary<String, Vector3>(positionCount);
-				for (int j = 0; j < positionCount; j++)
+				Vector3? position = null;
+				if (TrackerFrameData.Position.Check(dataFlags))
 				{
-					String label = inputStream.ReadString();
-
 					float posX = inputStream.ReadSingle();
 					float posY = inputStream.ReadSingle();
 					float posZ = inputStream.ReadSingle();
-					Vector3 position = new Vector3(posX, posY, posZ);
-
-					positions.Add(label, position);
+					position = new Vector3(posX, posY, posZ);
 				}
+
+				trackerFrames[designation] = new TrackerFrame(designation, rotation, position);
 			}
 
-			return new PoseFrame(vector, rotations, positions);
+			return new PoseFrame(trackerFrames);
 		}
 		catch (Exception e)
 		{
