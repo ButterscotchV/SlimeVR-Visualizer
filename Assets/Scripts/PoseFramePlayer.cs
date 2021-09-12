@@ -67,10 +67,11 @@ public class PoseFramePlayer : MonoBehaviour
 					{
 						curCursor = Play ? Cursor++ : Cursor;
 						_skeleton.SetPoseFromFrame(frames[curCursor]);
+						_skeleton.ApplyModifications();
 
 						Vector3 left = _skeleton.LeftAnkle.transform.position;
 						Vector3 right = _skeleton.RightAnkle.transform.position;
-						Debug.Log($"Feet positions:\nLeft {left.ToString("F4")}\tRight {right.ToString("F4")}");
+						Debug.Log($"Foot positions:\nLeft {left.ToString("F4")}\tRight {right.ToString("F4")}");
 					}
 				}
 				else if (Loop)

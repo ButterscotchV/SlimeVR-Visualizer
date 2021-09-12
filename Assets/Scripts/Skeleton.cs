@@ -7,10 +7,26 @@ using YamlDotNet.Serialization.NamingConventions;
 
 public class Skeleton : MonoBehaviour
 {
+	public string VrConfig = "vrconfig.yml";
+
 	private float WaistDistance;
 	private float ChestDistance;
 	private float LegsLength;
 	private float KneeHeight;
+
+	public float LeftScale;
+	public float RightScale;
+
+	public Material LineMaterial;
+
+	public Gradient SpineGradient = new Gradient();
+	public Gradient LegGradient = new Gradient();
+
+	public float LineWidth = 1f;
+
+	private LineRenderer SpineLine;
+	private LineRenderer LeftLegLine;
+	private LineRenderer RightLegLine;
 
 	public GameObject Hmd;
 	public GameObject Head;
@@ -70,7 +86,7 @@ public class Skeleton : MonoBehaviour
 	private void Start()
     {
 		// Load config values
-		if (LoadConfig("vrconfig.yml"))
+		if (LoadConfig(VrConfig))
 		{
 			Debug.Log("Loaded config bone lengths!");
 
@@ -115,15 +131,50 @@ public class Skeleton : MonoBehaviour
 		{
 			SetSkeletonConfig(config.Key, config.Value);
 		}
-    }
+
+		SpineLine = Hmd.AddComponent<LineRenderer>();
+		int i = 0;
+		ForEachChildRecursive(Hmd.transform, (transform) =>
+		{
+			i++;
+			return transform.childCount == 1;
+		});
+		SpineLine.positionCount = i;
+
+		LeftLegLine = LeftHip.AddComponent<LineRenderer>();
+		i = 0;
+		ForEachChildRecursive(LeftHip.transform, (transform) =>
+		{
+			i++;
+			return transform.childCount <= 1;
+		});
+		LeftLegLine.positionCount = i + 1;
+
+		RightLegLine = RightHip.AddComponent<LineRenderer>();
+		i = 0;
+		ForEachChildRecursive(RightHip.transform, (transform) =>
+		{
+			i++;
+			return transform.childCount <= 1;
+		});
+		RightLegLine.positionCount = i + 1;
+	}
 
 	private void ForEachChildRecursive(Transform transform, Action<Transform> action)
 	{
-		action.Invoke(transform);
+		ForEachChildRecursive(transform, (child) => { action.Invoke(child); return true; });
+	}
 
-		foreach (Transform node in transform)
+	private void ForEachChildRecursive(Transform transform, Func<Transform, bool> func)
+	{
+		if (!func.Invoke(transform))
 		{
-			ForEachChildRecursive(node, action);
+			return;
+		}
+
+		foreach (Transform child in transform)
+		{
+			ForEachChildRecursive(child, func);
 		}
 	}
 
@@ -169,29 +220,83 @@ public class Skeleton : MonoBehaviour
 	{
 		Hmd.transform.localPosition = frame.RootPos;
 
+		AveragePelvis(frame);
+
 		foreach (var rot in frame.Rotations)
 		{
-			if (Nodes.TryGetValue(rot.Key, out var transform))
+			if (rot.Key != "Waist" && Nodes.TryGetValue(rot.Key, out var transform))
 			{
 				transform.rotation = rot.Value;
 			}
 		}
 	}
 
+	public void ApplyModifications()
+	{
+		//ApplyFootOffset();
+	}
+
+	public void AveragePelvis(PoseFrame frame)
+	{
+		if (!frame.Rotations.TryGetValue("Waist", out var waistRot))
+		{
+			return;
+		}
+
+		if (!frame.Rotations.TryGetValue("Chest", out var chestRot))
+		{
+			return;
+		}
+
+		// Average the pelvis with 50% of the waist rotation
+		Quaternion rotation = Quaternion.Lerp(waistRot, chestRot, 0.3f);
+		Waist.transform.rotation = rotation;
+	}
+
+	public void ApplyFootOffset()
+	{
+		float leftAngle = Quaternion.Angle(LeftHip.transform.rotation, LeftKnee.transform.rotation);
+		LeftKnee.transform.Rotate(0, 0, leftAngle * LeftScale);
+
+		float rightAngle = Quaternion.Angle(RightHip.transform.rotation, RightKnee.transform.rotation);
+		RightKnee.transform.Rotate(0, 0, rightAngle * RightScale);
+	}
+
 	public void DrawDebug()
 	{
-		Debug.DrawLine(Hmd.transform.position, Head.transform.position);
-		Debug.DrawLine(Head.transform.position, Neck.transform.position);
-		Debug.DrawLine(Neck.transform.position, Chest.transform.position);
-		Debug.DrawLine(Chest.transform.position, Waist.transform.position);
+		SpineLine.colorGradient = SpineGradient;
+		SpineLine.widthMultiplier = LineWidth;
+		SpineLine.sharedMaterial = LineMaterial;
 
-		Debug.DrawLine(Waist.transform.position, LeftHip.transform.position);
-		Debug.DrawLine(Waist.transform.position, RightHip.transform.position);
+		LeftLegLine.colorGradient = LegGradient;
+		LeftLegLine.widthMultiplier = LineWidth;
+		LeftLegLine.sharedMaterial = LineMaterial;
 
-		Debug.DrawLine(LeftHip.transform.position, LeftKnee.transform.position);
-		Debug.DrawLine(RightHip.transform.position, RightKnee.transform.position);
+		RightLegLine.colorGradient = LegGradient;
+		RightLegLine.widthMultiplier = LineWidth;
+		RightLegLine.sharedMaterial = LineMaterial;
 
-		Debug.DrawLine(LeftKnee.transform.position, LeftAnkle.transform.position);
-		Debug.DrawLine(RightKnee.transform.position, RightAnkle.transform.position);
+		int i = 0;
+		ForEachChildRecursive(Hmd.transform, (transform) =>
+		{
+			SpineLine.SetPosition(i++, transform.position);
+			return transform.childCount == 1;
+		});
+
+		i = 0;
+		LeftLegLine.SetPosition(i++, Waist.transform.position);
+		ForEachChildRecursive(LeftHip.transform, (transform) =>
+		{
+			LeftLegLine.SetPosition(i++, transform.position);
+			return transform.childCount <= 1;
+		});
+
+		i = 0;
+		RightLegLine.SetPosition(i++, Waist.transform.position);
+		ForEachChildRecursive(RightHip.transform, (transform) =>
+		{
+			RightLegLine.SetPosition(i++, transform.position);
+			return transform.childCount <= 1;
+		});
 	}
 }
