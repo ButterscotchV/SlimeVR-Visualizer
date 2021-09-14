@@ -1,24 +1,29 @@
 using System.Collections.Generic;
-using static TrackerBodyPositionEnum;
+using static TrackerBodyPositionValues;
 
 public class PoseFrame
 {
-	public readonly Dictionary<TrackerBodyPosition, TrackerFrame> TrackerFrames;
+	public readonly List<TrackerFrame> TrackerFrames;
 
-	public PoseFrame(Dictionary<TrackerBodyPosition, TrackerFrame> trackerFrames)
+	public PoseFrame(List<TrackerFrame> trackerFrames)
 	{
 		TrackerFrames = trackerFrames;
     }
 
-	public PoseFrame(List<TrackerFrame> trackerFrames)
+	public TrackerFrame FindTracker(TrackerBodyPosition designation)
 	{
-		Dictionary<TrackerBodyPosition, TrackerFrame> trackerFramesDict = new Dictionary<TrackerBodyPosition, TrackerFrame>(trackerFrames.Count);
-
-		foreach (TrackerFrame trackerFrame in trackerFrames)
+		foreach (TrackerFrame tracker in TrackerFrames)
 		{
-			trackerFramesDict[trackerFrame.Designation] = trackerFrame;
+			if (tracker.Designation == designation)
+			{
+				return tracker;
+			}
 		}
+		return null;
+	}
 
-		TrackerFrames = trackerFramesDict;
+	public TrackerFrame FindTracker(TrackerBodyPosition designation, TrackerBodyPosition altDesignation)
+	{
+		return FindTracker(designation) ?? FindTracker(altDesignation);
 	}
 }

@@ -30,6 +30,7 @@ public class PoseFramePlayer : MonoBehaviour
 		{
 			Frames = frames;
 			Debug.Log($"{frames.Length} frames loaded!");
+			Debug.Log($"Loaded trackers: {string.Join(", ", frames[0].TrackerFrames)}");
 		}
 		else
 		{

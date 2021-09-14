@@ -4,7 +4,7 @@ using System.IO;
 using UnityEngine;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using static TrackerBodyPositionEnum;
+using static TrackerBodyPositionValues;
 
 public class Skeleton : MonoBehaviour
 {
@@ -221,17 +221,20 @@ public class Skeleton : MonoBehaviour
 
 	public void SetPoseFromFrame(PoseFrame frame)
 	{
-		foreach (var trackerFrame in frame.TrackerFrames.Values)
+		foreach (var trackerFrame in frame.TrackerFrames)
 		{
-			if (trackerFrame.Designation == TrackerBodyPositionEnum.Hmd && trackerFrame.HasData(TrackerFrameDataEnum.Position))
+			if (trackerFrame.Designation == TrackerBodyPositionValues.Hmd || trackerFrame.HasData(TrackerFrameDataValues.Position))
 			{
 				Hmd.transform.position = trackerFrame.Position.Value;
 			}
 
-			if (trackerFrame.HasData(TrackerFrameDataEnum.Rotation))
+			if (trackerFrame.HasData(TrackerFrameDataValues.Rotation))
 			{
 				GameObject node = GetNode(trackerFrame.Designation, true);
-				node.transform.rotation = trackerFrame.Rotation.Value;
+				if (node != null)
+				{
+					node.transform.rotation = trackerFrame.Rotation.Value;
+				}
 			}
 		}
 	}
@@ -258,23 +261,28 @@ public class Skeleton : MonoBehaviour
 
 	public GameObject GetNode(TrackerBodyPosition bodyPosition, bool rotationNode = false)
 	{
-		switch (bodyPosition.Designation.ToLower())
+		if (bodyPosition == null)
 		{
-			case "body:hmd":
+			return null;
+		}
+
+		switch (bodyPosition.EnumValue)
+		{
+			case TrackerBodyPositionEnum.Hmd:
 				return Hmd;
-			case "body:chest":
+			case TrackerBodyPositionEnum.Chest:
 				return rotationNode ? Neck : Chest;
-			case "body:waist":
+			case TrackerBodyPositionEnum.Waist:
 				return rotationNode ? Chest : Waist;
 
-			case "body:left_leg":
+			case TrackerBodyPositionEnum.LeftLeg:
 				return rotationNode ? LeftHip : LeftKnee;
-			case "body:right_leg":
+			case TrackerBodyPositionEnum.RightLeg:
 				return rotationNode ? RightHip : RightKnee;
 
-			case "body:left_ankle":
+			case TrackerBodyPositionEnum.LeftAnkle:
 				return rotationNode ? LeftKnee : LeftAnkle;
-			case "body:right_ankle":
+			case TrackerBodyPositionEnum.RightAnkle:
 				return rotationNode ? RightKnee : RightAnkle;
 		}
 
