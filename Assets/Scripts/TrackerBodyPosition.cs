@@ -32,10 +32,13 @@ public class TrackerBodyPositionValues
 			EnumValue = enumValue;
 			Designation = designation;
 
+			// Set up lists
+			Values.Add(this);
 			_byDesignation[designation.ToLower()] = this;
 		}
 	}
 
+	public static readonly List<TrackerBodyPosition> Values = new List<TrackerBodyPosition>();
 	private static readonly Dictionary<string, TrackerBodyPosition> _byDesignation = new Dictionary<string, TrackerBodyPosition>();
 
 	public static readonly TrackerBodyPosition None = new TrackerBodyPosition(TrackerBodyPositionEnum.None, "");
@@ -67,7 +70,7 @@ public class TrackerBodyPositionValues
 
 	public static TrackerBodyPosition GetByEnumValue(TrackerBodyPositionEnum enumValue)
 	{
-		foreach (TrackerBodyPosition trackerBodyPosition in _byDesignation.Values)
+		foreach (TrackerBodyPosition trackerBodyPosition in Values)
 		{
 			if (trackerBodyPosition.EnumValue == enumValue)
 			{

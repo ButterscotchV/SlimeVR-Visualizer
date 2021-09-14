@@ -1,24 +1,17 @@
-using System.Collections.Generic;
 using UnityEngine;
 using static TrackerBodyPositionValues;
 using static TrackerFrameDataValues;
 
 public class TrackerFrame
 {
-	public int DataFlags { get; private set; } = 0;
+	public readonly int DataFlags = 0;
 
-	public readonly string Name = "TrackerFrame";
 	public readonly TrackerBodyPosition Designation;
 	public readonly Quaternion? Rotation;
 	public readonly Vector3? Position;
 
-	public TrackerFrame(string designationString, TrackerBodyPosition designation, Quaternion? rotation, Vector3? position)
+	public TrackerFrame(TrackerBodyPosition designation, Quaternion? rotation, Vector3? position)
 	{
-		if (designationString != null)
-		{
-			Name = $"TrackerFrame:/{designationString}";
-		}
-
 		Designation = designation;
 		if (designation != null)
 		{
@@ -38,10 +31,6 @@ public class TrackerFrame
 		}
 	}
 
-	public TrackerFrame(TrackerBodyPosition designation, Quaternion? rotation, Vector3? position) : this(designation?.Designation, designation, rotation, position)
-	{
-	}
-
 	public bool HasData(TrackerFrameData flag)
 	{
 		return flag.Check(DataFlags);
@@ -49,6 +38,6 @@ public class TrackerFrame
 
 	public override string ToString()
 	{
-		return Name;
+		return $"TrackerFrame:/{Designation?.Designation}";
 	}
 }

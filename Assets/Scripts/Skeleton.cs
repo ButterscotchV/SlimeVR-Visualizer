@@ -219,35 +219,86 @@ public class Skeleton : MonoBehaviour
 		}
 	}
 
-	public void SetPoseFromFrame(PoseFrame frame)
+	public void SetPoseFromFrame(TrackerFrame[] frame)
 	{
-		foreach (var trackerFrame in frame.TrackerFrames)
+		SetHmd(frame);
+
+		foreach (var bodyPosition in TrackerBodyPositionValues.Values)
 		{
-			if (trackerFrame.Designation == TrackerBodyPositionValues.Hmd || trackerFrame.HasData(TrackerFrameDataValues.Position))
+			if (bodyPosition == TrackerBodyPositionValues.Hmd)
 			{
-				Hmd.transform.position = trackerFrame.Position.Value;
+				continue;
 			}
 
-			if (trackerFrame.HasData(TrackerFrameDataValues.Rotation))
+			var tracker = frame.FindTracker(bodyPosition);
+
+			GameObject rotationNode = GetNode(bodyPosition, true);
+			if (rotationNode != null)
 			{
-				GameObject node = GetNode(trackerFrame.Designation, true);
-				if (node != null)
+				if (tracker != null && tracker.HasData(TrackerFrameDataValues.Rotation))
 				{
-					node.transform.rotation = trackerFrame.Rotation.Value;
+					rotationNode.transform.rotation = tracker.Rotation.Value;
 				}
+				else
+				{
+					rotationNode.transform.rotation = Quaternion.identity;
+				}
+			}
+
+			if (bodyPosition == TrackerBodyPositionValues.Waist)
+			{
+				AveragePelvis(frame);
 			}
 		}
 	}
 
-	public void ApplyModifications()
+	public void SetHmd(TrackerFrame[] frame)
 	{
-		AveragePelvis();
+		var tracker = frame.FindTracker(TrackerBodyPositionValues.Hmd);
+
+		if (tracker != null && tracker.HasData(TrackerFrameDataValues.Position))
+		{
+			Hmd.transform.position = tracker.Position.Value;
+		}
+
+		if (tracker != null && tracker.HasData(TrackerFrameDataValues.Rotation))
+		{
+			Hmd.transform.rotation = tracker.Rotation.Value;
+			Head.transform.rotation = tracker.Rotation.Value;
+		}
 	}
 
-	public void AveragePelvis()
+	public void AveragePelvis(TrackerFrame[] frame)
 	{
+		var waist = frame.FindTracker(TrackerBodyPositionValues.Waist);
+
+		var leftLeg = frame.FindTracker(TrackerBodyPositionValues.LeftLeg);
+		var rightLeg = frame.FindTracker(TrackerBodyPositionValues.RightLeg);
+
+		if ((leftLeg == null || rightLeg == null) || (!leftLeg.HasData(TrackerFrameDataValues.Rotation) || !rightLeg.HasData(TrackerFrameDataValues.Rotation)))
+		{
+			if (waist != null && waist.HasData(TrackerFrameDataValues.Rotation))
+			{
+				Waist.transform.rotation = waist.Rotation.Value;
+				return;
+			}
+		}
+
+		if (waist == null || !waist.HasData(TrackerFrameDataValues.Rotation))
+		{
+			if ((leftLeg != null && rightLeg != null) && (leftLeg.HasData(TrackerFrameDataValues.Rotation) && rightLeg.HasData(TrackerFrameDataValues.Rotation)))
+			{
+				Waist.transform.rotation = Quaternion.Lerp(leftLeg.Rotation.Value, rightLeg.Rotation.Value, 0.5f);
+				return;
+			}
+		}
+
 		// Average the pelvis with the waist rotation
-		Waist.transform.rotation = Quaternion.Lerp(Quaternion.Lerp(LeftHip.transform.rotation, RightHip.transform.rotation, 0.5f), Chest.transform.rotation, HipMix);
+		Waist.transform.rotation = Quaternion.Lerp(Quaternion.Lerp(leftLeg.Rotation.Value, rightLeg.Rotation.Value, 0.5f), waist.Rotation.Value, HipMix);
+	}
+
+	public void ApplyModifications()
+	{
 	}
 
 	public void ApplyFootOffset()

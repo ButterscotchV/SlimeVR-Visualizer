@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 public class TrackerFrameDataValues
 {
 	public enum TrackerFrameDataEnum
@@ -16,6 +18,9 @@ public class TrackerFrameDataValues
 		public TrackerFrameData(TrackerFrameDataEnum enumValue)
 		{
 			EnumValue = enumValue;
+
+			// Set up list
+			Values.Add(this);
 		}
 
 		public bool Check(int dataFlags)
@@ -23,6 +28,8 @@ public class TrackerFrameDataValues
 			return (dataFlags & Flag) != 0;
 		}
 	}
+
+	public static readonly List<TrackerFrameData> Values = new List<TrackerFrameData>();
 
 	public static readonly TrackerFrameData Designation = new TrackerFrameData(TrackerFrameDataEnum.Designation);
 	public static readonly TrackerFrameData Rotation = new TrackerFrameData(TrackerFrameDataEnum.Rotation);

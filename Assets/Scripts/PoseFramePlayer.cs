@@ -6,7 +6,8 @@ public class PoseFramePlayer : MonoBehaviour
 	public string File = "C:/Users/Dankrushen/Documents/SlimeVR AutoBone/Butterscotch!/ABRecording1.abf";
 	private string _loadedFile;
 
-	public PoseFrame[] Frames;
+	public PoseFrame Frames;
+	private TrackerFrame[] FrameBuffer;
 
 	public bool Play = true;
 	public bool Loop = true;
@@ -23,14 +24,15 @@ public class PoseFramePlayer : MonoBehaviour
 
 	private void LoadFile(string file)
 	{
-		PoseFrame[] frames = PoseFrameIO.ReadFromFile(file);
+		PoseFrame frames = PoseFrameIO.ReadFromFile(file);
 		_loadedFile = File;
 
-		if (frames != null && frames.Length > 0)
+		if (frames != null && frames.GetTrackerCount() > 0)
 		{
 			Frames = frames;
-			Debug.Log($"{frames.Length} frames loaded!");
-			Debug.Log($"Loaded trackers: {string.Join(", ", frames[0].TrackerFrames)}");
+			FrameBuffer = new TrackerFrame[frames.GetTrackerCount()];
+			Debug.Log($"{frames.GetMaxFrameCount()} frames loaded!");
+			Debug.Log($"Loaded trackers: {string.Join(", ", frames.GetTrackers())}");
 		}
 		else
 		{
@@ -57,17 +59,18 @@ public class PoseFramePlayer : MonoBehaviour
 				Cursor = 0;
 			}
 
-			PoseFrame[] frames = Frames;
+			PoseFrame frames = Frames;
 
-			if (frames != null && frames.Length > 0)
+			if (frames != null && frames.GetTrackerCount() > 0)
 			{
-				if (Cursor >= 0 && Cursor < frames.Length)
+				if (Cursor >= 0 && Cursor < frames.GetMaxFrameCount())
 				{
 					NextFrameTime = Time.realtimeSinceStartup + Interval;
 					if (Play || curCursor != Cursor)
 					{
 						curCursor = Play ? Cursor++ : Cursor;
-						_skeleton.SetPoseFromFrame(frames[curCursor]);
+						frames.GetFrames(curCursor, FrameBuffer);
+						_skeleton.SetPoseFromFrame(FrameBuffer);
 						_skeleton.ApplyModifications();
 
 						Vector3 left = _skeleton.LeftAnkle.transform.position;

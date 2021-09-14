@@ -6,64 +6,50 @@ using static TrackerBodyPositionValues;
 
 public static class PoseFrameIO
 {
-	public static bool WriteToFile(string file, PoseFrame[] frames)
+	public static bool WriteFrames(BinaryWriter outputStream, PoseFrame frames)
 	{
 		try
 		{
-			using (BinaryWriter outputStream = new EndiannessAwareBinaryWriter(new BufferedStream(File.OpenRead(file)), Endianness.Big))
+			if (frames != null)
 			{
-				// Write every frame
-				outputStream.Write(frames.Length);
-				foreach (PoseFrame frame in frames)
+
+				outputStream.Write(frames.GetTrackerCount());
+				foreach (var tracker in frames.GetTrackers())
 				{
-					WriteFrame(outputStream, frame);
+
+					outputStream.Write(tracker.Name);
+					outputStream.Write(tracker.GetFrameCount());
+					foreach (TrackerFrame trackerFrame in tracker)
+					{
+						outputStream.Write(trackerFrame.DataFlags);
+
+						if (trackerFrame.HasData(TrackerFrameDataValues.Designation))
+						{
+							outputStream.Write(trackerFrame.Designation.Designation);
+						}
+
+						if (trackerFrame.HasData(TrackerFrameDataValues.Rotation))
+						{
+							Quaternion quat = trackerFrame.Rotation.Value;
+							outputStream.Write(quat.x);
+							outputStream.Write(quat.y);
+							outputStream.Write(quat.z);
+							outputStream.Write(quat.w);
+						}
+
+						if (trackerFrame.HasData(TrackerFrameDataValues.Position))
+						{
+							Vector3 vec = trackerFrame.Position.Value;
+							outputStream.Write(vec.x);
+							outputStream.Write(vec.y);
+							outputStream.Write(vec.z);
+						}
+					}
 				}
 			}
-		}
-		catch (Exception e)
-		{
-			Debug.LogError("Error writing frames to file");
-			Debug.LogException(e);
-			return false;
-		}
-
-		return true;
-	}
-
-	public static bool WriteFrame(BinaryWriter outputStream, PoseFrame frame)
-	{
-		try
-		{
-			if (frame != null && frame.TrackerFrames != null)
+			else
 			{
-				outputStream.Write(frame.TrackerFrames.Count);
-
-				foreach (TrackerFrame trackerFrame in frame.TrackerFrames)
-				{
-					outputStream.Write(trackerFrame.DataFlags);
-
-					if (trackerFrame.HasData(TrackerFrameDataValues.Designation))
-					{
-						outputStream.Write(trackerFrame.Designation.Designation);
-					}
-
-					if (trackerFrame.HasData(TrackerFrameDataValues.Rotation))
-					{
-						Quaternion quat = trackerFrame.Rotation.Value;
-						outputStream.Write(quat.x);
-						outputStream.Write(quat.y);
-						outputStream.Write(quat.z);
-						outputStream.Write(quat.w);
-					}
-
-					if (trackerFrame.HasData(TrackerFrameDataValues.Position))
-					{
-						Vector3 vec = trackerFrame.Position.Value;
-						outputStream.Write(vec.x);
-						outputStream.Write(vec.y);
-						outputStream.Write(vec.z);
-					}
-				}
+				outputStream.Write(0);
 			}
 		}
 		catch (Exception e)
@@ -76,13 +62,13 @@ public static class PoseFrameIO
 		return true;
 	}
 
-	public static bool WriteFrame(string file, PoseFrame frame)
+	public static bool WriteToFile(string file, PoseFrame frame)
 	{
 		try
 		{
 			using (BinaryWriter outputStream = new EndiannessAwareBinaryWriter(new BufferedStream(File.OpenRead(file)), Endianness.Big))
 			{
-				WriteFrame(outputStream, frame);
+				WriteFrames(outputStream, frame);
 			}
 		}
 		catch (Exception e)
@@ -95,74 +81,55 @@ public static class PoseFrameIO
 		return true;
 	}
 
-	public static PoseFrame[] ReadFromFile(string file)
+	public static PoseFrame ReadFrames(BinaryReader inputStream)
 	{
 		try
 		{
-			using (BinaryReader inputStream = new EndiannessAwareBinaryReader(new BufferedStream(File.OpenRead(file)), Endianness.Big))
+
+			int trackerCount = inputStream.ReadInt32();
+			List<PoseFrameTracker> trackers = new List<PoseFrameTracker>(trackerCount);
+			for (int i = 0; i < trackerCount; i++)
 			{
-				int frameCount = inputStream.ReadInt32();
 
-				PoseFrame[] frames = new PoseFrame[frameCount];
-				for (int i = 0; i < frameCount; i++)
+				string name = inputStream.ReadString();
+				int trackerFrameCount = inputStream.ReadInt32();
+				List<TrackerFrame> trackerFrames = new List<TrackerFrame>(trackerFrameCount);
+				for (int j = 0; j < trackerFrameCount; j++)
 				{
-					frames[i] = ReadFrame(inputStream);
+					int dataFlags = inputStream.ReadInt32();
+
+					TrackerBodyPosition designation = null;
+					if (TrackerFrameDataValues.Designation.Check(dataFlags))
+					{
+						designation = TrackerBodyPositionValues.GetByDesignation(inputStream.ReadString());
+					}
+
+					Quaternion? rotation = null;
+					if (TrackerFrameDataValues.Rotation.Check(dataFlags))
+					{
+						float quatX = inputStream.ReadSingle();
+						float quatY = inputStream.ReadSingle();
+						float quatZ = inputStream.ReadSingle();
+						float quatW = inputStream.ReadSingle();
+						rotation = new Quaternion(quatX, quatY, quatZ, quatW);
+					}
+
+					Vector3? position = null;
+					if (TrackerFrameDataValues.Position.Check(dataFlags))
+					{
+						float posX = inputStream.ReadSingle();
+						float posY = inputStream.ReadSingle();
+						float posZ = inputStream.ReadSingle();
+						position = new Vector3(posX, posY, posZ);
+					}
+
+					trackerFrames.Add(new TrackerFrame(designation, rotation, position));
 				}
 
-				return frames;
-			}
-		}
-		catch (Exception e)
-		{
-			Debug.LogError("Error reading frames from file");
-			Debug.LogException(e);
-		}
-
-		return null;
-	}
-
-	public static PoseFrame ReadFrame(BinaryReader inputStream)
-	{
-		try
-		{
-			int trackerFrameCount = inputStream.ReadInt32();
-
-			List<TrackerFrame> trackerFrames = new List<TrackerFrame>(trackerFrameCount);
-			for (int i = 0; i < trackerFrameCount; i++)
-			{
-				int dataFlags = inputStream.ReadInt32();
-
-				string designationString = null;
-				TrackerBodyPosition designation = null;
-				if (TrackerFrameDataValues.Designation.Check(dataFlags))
-				{
-					designationString = inputStream.ReadString();
-					designation = TrackerBodyPositionValues.GetByDesignation(designationString);
-				}
-
-				Quaternion? rotation = null;
-				if (TrackerFrameDataValues.Rotation.Check(dataFlags))
-				{
-					float quatX = inputStream.ReadSingle();
-					float quatY = inputStream.ReadSingle();
-					float quatZ = inputStream.ReadSingle();
-					float quatW = inputStream.ReadSingle();
-					rotation = new Quaternion(quatX, quatY, quatZ, quatW);
-				}
-
-				Vector3? position = null;
-				if (TrackerFrameDataValues.Position.Check(dataFlags))
-				{
-					float posX = inputStream.ReadSingle();
-					float posY = inputStream.ReadSingle();
-					float posZ = inputStream.ReadSingle();
-					position = new Vector3(posX, posY, posZ);
-				}
-
-				trackerFrames.Add(new TrackerFrame(designationString, designation, rotation, position));
+				trackers.Add(new PoseFrameTracker(name, trackerFrames));
 			}
 
-			return new PoseFrame(trackerFrames);
+			return new PoseFrame(trackers);
 		}
 		catch (Exception e)
 		{
@@ -173,11 +140,11 @@ public static class PoseFrameIO
 		return null;
 	}
 
-	public static PoseFrame ReadFrame(string file)
+	public static PoseFrame ReadFromFile(string file)
 	{
 		try
 		{
-			return ReadFrame(new EndiannessAwareBinaryReader(new BufferedStream(File.OpenRead(file)), Endianness.Big));
+			return ReadFrames(new EndiannessAwareBinaryReader(new BufferedStream(File.OpenRead(file)), Endianness.Big));
 		}
 		catch (Exception e)
 		{

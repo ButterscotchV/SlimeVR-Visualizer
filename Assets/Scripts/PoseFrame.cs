@@ -1,29 +1,54 @@
 using System.Collections.Generic;
-using static TrackerBodyPositionValues;
 
 public class PoseFrame
 {
-	public readonly List<TrackerFrame> TrackerFrames;
+	private readonly List<PoseFrameTracker> Trackers;
 
-	public PoseFrame(List<TrackerFrame> trackerFrames)
+	public PoseFrame(List<PoseFrameTracker> trackers)
 	{
-		TrackerFrames = trackerFrames;
+		Trackers = trackers;
     }
 
-	public TrackerFrame FindTracker(TrackerBodyPosition designation)
+	public int GetTrackerCount()
 	{
-		foreach (TrackerFrame tracker in TrackerFrames)
-		{
-			if (tracker.Designation == designation)
-			{
-				return tracker;
-			}
-		}
-		return null;
+		return Trackers.Count;
 	}
 
-	public TrackerFrame FindTracker(TrackerBodyPosition designation, TrackerBodyPosition altDesignation)
+	public List<PoseFrameTracker> GetTrackers()
 	{
-		return FindTracker(designation) ?? FindTracker(altDesignation);
+		return Trackers;
+	}
+
+	public int GetMaxFrameCount()
+	{
+		int maxFrames = 0;
+
+		for (int i = 0; i < Trackers.Count; i++)
+		{
+			PoseFrameTracker tracker = Trackers[i];
+			if (tracker != null && tracker.GetFrameCount() > maxFrames)
+			{
+				maxFrames = tracker.GetFrameCount();
+			}
+		}
+
+		return maxFrames;
+	}
+
+	public int GetFrames(int index, TrackerFrame[] buffer)
+	{
+		for (int i = 0; i < Trackers.Count; i++)
+		{
+			buffer[i] = Trackers[i]?.SafeGetFrame(index);
+		}
+
+		return Trackers.Count;
+	}
+
+	public TrackerFrame[] GetFrames(int index)
+	{
+		TrackerFrame[] buffer = new TrackerFrame[Trackers.Count];
+		GetFrames(index, buffer);
+		return buffer;
 	}
 }
