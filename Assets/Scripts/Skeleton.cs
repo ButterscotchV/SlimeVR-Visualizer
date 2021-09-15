@@ -244,12 +244,12 @@ public class Skeleton : MonoBehaviour
 		SetRotation(waist, Chest);
 
 		TrackerFrame leftLeg = frame.FindTracker(TrackerBodyPositionValues.LeftLeg);
-		SetRotation(leftLeg, LeftHip);
-
 		TrackerFrame rightLeg = frame.FindTracker(TrackerBodyPositionValues.RightLeg);
-		SetRotation(rightLeg, RightHip);
-
+		
 		AveragePelvis(waist, leftLeg, rightLeg);
+
+		SetRotation(leftLeg, LeftHip);
+		SetRotation(rightLeg, RightHip);
 
 		TrackerFrame leftAnkle = frame.FindTracker(TrackerBodyPositionValues.LeftAnkle);
 		SetRotation(leftAnkle, RightKnee);
