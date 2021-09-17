@@ -225,15 +225,15 @@ public class Skeleton : MonoBehaviour
 
 		if (hmd != null)
 		{
-			if (hmd.HasData(TrackerFrameDataValues.Position))
-			{
-				Hmd.transform.localPosition = hmd.Position.Value;
-			}
-
 			if (hmd.HasData(TrackerFrameDataValues.Rotation))
 			{
 				Hmd.transform.rotation = hmd.Rotation.Value;
 				Head.transform.rotation = hmd.Rotation.Value;
+			}
+
+			if (hmd.HasData(TrackerFrameDataValues.Position))
+			{
+				Hmd.transform.localPosition = hmd.Position.Value;
 			}
 		}
 
@@ -260,12 +260,9 @@ public class Skeleton : MonoBehaviour
 
 	public void SetRotation(TrackerFrame tracker, GameObject node)
 	{
-		if (tracker != null)
+		if (tracker != null && tracker.HasData(TrackerFrameDataValues.Rotation))
 		{
-			if (tracker.HasData(TrackerFrameDataValues.Rotation))
-			{
-				node.transform.rotation = tracker.Rotation.Value;
-			}
+			node.transform.rotation = tracker.Rotation.Value;
 		}
 	}
 
