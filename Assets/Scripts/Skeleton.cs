@@ -290,6 +290,7 @@ public class Skeleton : MonoBehaviour
 
 	public void ApplyModifications()
 	{
+		ApplyKneeOffset();
 	}
 
 	public void ApplyFootOffset()
@@ -298,6 +299,17 @@ public class Skeleton : MonoBehaviour
 		LeftKnee.transform.Rotate(0, 0, leftAngle * LeftScale);
 
 		float rightAngle = Quaternion.Angle(RightHip.transform.rotation, RightKnee.transform.rotation);
+		RightKnee.transform.Rotate(0, 0, rightAngle * RightScale);
+	}
+
+	public void ApplyKneeOffset()
+	{
+		float leftAngle = Quaternion.Angle(LeftHip.transform.rotation, LeftKnee.transform.rotation);
+		LeftHip.transform.Rotate(0, 0, -leftAngle * LeftScale);
+		LeftKnee.transform.Rotate(0, 0, leftAngle * LeftScale);
+
+		float rightAngle = Quaternion.Angle(RightHip.transform.rotation, RightKnee.transform.rotation);
+		RightHip.transform.Rotate(0, 0, -rightAngle * RightScale);
 		RightKnee.transform.Rotate(0, 0, rightAngle * RightScale);
 	}
 

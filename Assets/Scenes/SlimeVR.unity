@@ -151,7 +151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4aa5f037576bf044e82a672c3422a9a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  File: C:\Users\Dankrushen\Documents\SlimeVR AutoBone\Butterscotch!\ABRecording2.pfr
+  File: C:\Users\Butterscotch\git\SlimeVR-Visualizer\ABRecording4.pfr
   Play: 0
   Loop: 1
   Interval: 0.02
@@ -182,7 +182,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1de95c4894155a048a67a1d63e966a80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  VrConfig: butter-vrconfig.yml
+  VrConfig: vrconfig.yml
   LeftScale: 0
   RightScale: 0
   LineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
